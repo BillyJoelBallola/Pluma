@@ -49,7 +49,7 @@ export default function Login() {
       <div className="h-[90%] w-full grid place-items-center">
         <div className="text-center w-full sm:w-[22rem]">
           {Object.keys(errors).length !== 0 && (
-            <div className="mb-4 w-full text-left dark:bg-gray-800 rounded-sm text-sm p-2">
+            <div className="mb-4 w-full text-left bg-gray-200 dark:bg-gray-800 rounded-sm text-sm p-2">
               <div className="flex gap-2 items-center mb-2">
                 <TriangleAlert className="size-5" />
                 <h2 className="font-semibold text-lg">There is a problem</h2>

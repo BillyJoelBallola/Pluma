@@ -1,28 +1,23 @@
-// src/app/api/auth/route.ts or wherever this lives
-
 import { createUserSchema } from "@/zod-schemas/users";
 import mysql from "mysql2/promise";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { cookies } from "next/headers";
 
 const connectionParams = db();
 const JWT_SECRET = process.env.JWT_SECRET!;
 const COOKIE_NAME = "session_token";
+const MAX_AGE = 60 * 60 * 24 * 7;
 
-// Utility: create JWT token
 function createToken(user: { id: number; email: string }) {
-  return jwt.sign(user, JWT_SECRET, { expiresIn: "7d" });
-}
-
-// Utility: create Set-Cookie header
-function createCookie(token: string) {
-  return `${COOKIE_NAME}=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800`;
+  return jwt.sign(user, JWT_SECRET, { expiresIn: MAX_AGE });
 }
 
 // POST: Register User
 export async function POST(req: Request) {
   try {
+    const cookieStore = await cookies();
     const body = await req.json();
     const parsed = createUserSchema.parse(body);
 
@@ -55,16 +50,24 @@ export async function POST(req: Request) {
       [parsed.username, parsed.email, hashedPassword]
     );
 
+    await connection.end();
+
     const userId = result.insertId;
 
     const token = createToken({ id: userId, email: parsed.email });
-    const cookie = createCookie(token);
 
-    await connection.end();
+    cookieStore.set({
+      name: COOKIE_NAME,
+      value: token,
+      httpOnly: true,
+      path: "/",
+      maxAge: MAX_AGE,
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
-      headers: { "Set-Cookie": cookie },
     });
   } catch (error: any) {
     console.error("Error in POST /api/auth:", error);
@@ -77,6 +80,7 @@ export async function POST(req: Request) {
 // POST: Login User
 export async function PUT(req: Request) {
   try {
+    const cookieStore = await cookies();
     const body = await req.json();
     const { email, password } = body;
 
@@ -103,11 +107,19 @@ export async function PUT(req: Request) {
     }
 
     const token = createToken({ id: user.id, email: user.email });
-    const cookie = createCookie(token);
+
+    cookieStore.set({
+      name: COOKIE_NAME,
+      value: token,
+      httpOnly: true,
+      path: "/",
+      maxAge: MAX_AGE,
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
-      headers: { "Set-Cookie": cookie },
     });
   } catch (error: any) {
     console.error("Error in PUT /api/auth:", error);
@@ -118,10 +130,8 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE() {
+  (await cookies()).delete(COOKIE_NAME);
   return new Response(JSON.stringify({ success: true }), {
     status: 200,
-    headers: {
-      "Set-Cookie": `${COOKIE_NAME}=; Path=/; HttpOnly; Max-Age=0; Secure; SameSite=Strict`,
-    },
   });
 }
