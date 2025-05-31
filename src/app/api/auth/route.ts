@@ -72,10 +72,6 @@ export async function POST(req: Request) {
     });
 
     return response;
-
-    // return new Response(JSON.stringify({ success: true }), {
-    //   status: 200,
-    // });
   } catch (error: any) {
     console.error("Error in POST /api/auth:", error);
     return new Response(JSON.stringify({ error: "Something went wrong." }), {
@@ -130,10 +126,6 @@ export async function PUT(req: Request) {
     });
 
     return response;
-
-    // return new Response(JSON.stringify({ success: true }), {
-    //   status: 200,
-    // });
   } catch (error: any) {
     console.error("Error in PUT /api/auth:", error);
     return new Response(JSON.stringify({ error: "Login failed." }), {

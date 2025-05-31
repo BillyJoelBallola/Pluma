@@ -153,7 +153,7 @@ export default function Appearance() {
           className="mt-4 max-w-fit cursor-pointer"
           onClick={() => handleUpdatePreferences()}
         >
-          User Preferences
+          Save Preferences
         </Button>
       </div>
     </div>
