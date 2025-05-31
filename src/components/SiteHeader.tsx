@@ -5,10 +5,23 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import HeaderButtonMenu from "@/components/HeaderButtonMenu";
 
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { UserSchemaType } from "@/zod-schemas/users";
+import { getUserById } from "@/app/actions/users/getUserById";
 
 export default function SiteHeader() {
   const pathname = usePathname();
   const headerName = pathname.split("/")[1];
+  const [userData, setUserData] = useState<UserSchemaType | undefined>();
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const data = await getUserById();
+      setUserData(data);
+    };
+
+    fetchUserData();
+  }, []);
 
   return (
     <header className="group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 flex h-14 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear justify-between px-4">
@@ -29,8 +42,7 @@ export default function SiteHeader() {
             : "Pluma"}
         </h1>
       </div>
-      {/* TODO: dynamic dropdown menu */}
-      <HeaderButtonMenu />
+      {userData && <HeaderButtonMenu data={userData} />}
     </header>
   );
 }

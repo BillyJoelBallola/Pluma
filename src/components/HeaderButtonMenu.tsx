@@ -11,8 +11,9 @@ import {
 import ModeToggle from "./ModeToggle";
 import { logout } from "@/app/actions/auth/logout";
 import { useRouter } from "next/navigation";
+import { UserSchemaType } from "@/zod-schemas/users";
 
-export default function HeaderButtonMenu() {
+export default function HeaderButtonMenu({ data }: { data: UserSchemaType }) {
   const router = useRouter();
 
   return (
@@ -25,16 +26,20 @@ export default function HeaderButtonMenu() {
       <DropdownMenuContent className="p-0">
         <DropdownMenuItem className="border-b rounded-none px-4" asChild>
           <Link href={"/notes"} className="grid">
-            <p className="font-semibold font-lg">Username</p>
-            <p className="text-sm -mt-3 text-gray-500">bjayballola@pluma.com</p>
+            <p className="font-semibold font-lg">
+              {data ? data.username : "Username"}
+            </p>
+            <p className="text-sm -mt-3 text-gray-500">
+              {data ? data.email : "pluma@example.com"}
+            </p>
           </Link>
         </DropdownMenuItem>
-        {/* <DropdownMenuItem className="rounded-none px-4" asChild> */}
-        <div className="flex items-center justify-between text-sm px-4 py-2">
-          <p>Dark</p>
-          <ModeToggle />
-        </div>
-        {/* </DropdownMenuItem> */}
+        <DropdownMenuItem className="rounded-none px-4" asChild>
+          <div className="flex items-center justify-between text-sm px-4 py-2">
+            <p>Dark</p>
+            <ModeToggle />
+          </div>
+        </DropdownMenuItem>
         <DropdownMenuItem className="border-b rounded-none px-4" asChild>
           <Link
             href={"/settings"}

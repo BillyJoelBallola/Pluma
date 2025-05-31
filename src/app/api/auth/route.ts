@@ -1,4 +1,5 @@
 import { createUserSchema } from "@/zod-schemas/users";
+import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
@@ -17,7 +18,7 @@ function createToken(user: { id: number; email: string }) {
 // POST: Register User
 export async function POST(req: Request) {
   try {
-    const cookieStore = await cookies();
+    const cookieStore = cookies();
     const body = await req.json();
     const parsed = createUserSchema.parse(body);
 
@@ -56,19 +57,25 @@ export async function POST(req: Request) {
 
     const token = createToken({ id: userId, email: parsed.email });
 
-    cookieStore.set({
+    const response = NextResponse.json(JSON.stringify({ success: true }), {
+      status: 200,
+    });
+
+    response.cookies.set({
       name: COOKIE_NAME,
       value: token,
       httpOnly: true,
       path: "/",
       maxAge: MAX_AGE,
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      secure: false,
     });
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-    });
+    return response;
+
+    // return new Response(JSON.stringify({ success: true }), {
+    //   status: 200,
+    // });
   } catch (error: any) {
     console.error("Error in POST /api/auth:", error);
     return new Response(JSON.stringify({ error: "Something went wrong." }), {
@@ -80,7 +87,7 @@ export async function POST(req: Request) {
 // POST: Login User
 export async function PUT(req: Request) {
   try {
-    const cookieStore = await cookies();
+    const cookieStore = cookies();
     const body = await req.json();
     const { email, password } = body;
 
@@ -108,19 +115,25 @@ export async function PUT(req: Request) {
 
     const token = createToken({ id: user.id, email: user.email });
 
-    cookieStore.set({
+    const response = NextResponse.json(JSON.stringify({ success: true }), {
+      status: 200,
+    });
+
+    response.cookies.set({
       name: COOKIE_NAME,
       value: token,
       httpOnly: true,
       path: "/",
       maxAge: MAX_AGE,
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      secure: false,
     });
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-    });
+    return response;
+
+    // return new Response(JSON.stringify({ success: true }), {
+    //   status: 200,
+    // });
   } catch (error: any) {
     console.error("Error in PUT /api/auth:", error);
     return new Response(JSON.stringify({ error: "Login failed." }), {

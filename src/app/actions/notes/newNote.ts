@@ -1,3 +1,4 @@
+import { verifyUser } from "@/lib/verifyUser";
 import { NoteSchemaType } from "@/zod-schemas/notes";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { UseFormReset } from "react-hook-form";
@@ -11,10 +12,11 @@ export async function newNote(
   const baseUrl = process.env.BASE_URL || "http://localhost:3000";
 
   try {
+    const userId = await verifyUser();
     const res = await fetch(`${baseUrl}/api/notes`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ userId: userId, ...data }),
     });
 
     const json = await res.json();

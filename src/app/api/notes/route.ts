@@ -1,29 +1,15 @@
 import { createNoteSchema } from "@/zod-schemas/notes";
-import { cookies } from "next/headers";
 import mysql from "mysql2/promise";
-import jwt from "jsonwebtoken";
 import { db } from "@/lib/db";
 import { z } from "zod";
 
-const secret = process.env.JWT_SECRET!;
 const connectionParams = db();
 
 export async function GET(req: Request) {
   try {
-    const cookieStore = await cookies();
-    const sessionToken = cookieStore.get("session_token");
-
-    if (!sessionToken) {
-      return new Response(JSON.stringify({ message: "Unauthorized" }), {
-        status: 401,
-      });
-    }
-
-    const decoded = jwt.verify(sessionToken.value, secret) as { id: number };
-    const userId = decoded.id;
-
     const { searchParams } = new URL(req.url);
     const noteId = searchParams.get("noteId");
+    const userId = searchParams.get("userId");
 
     const connection = await mysql.createConnection(connectionParams);
 
@@ -39,6 +25,7 @@ export async function GET(req: Request) {
     }
 
     const [rows] = await connection.execute(query, params);
+
     connection.end();
 
     if (noteId && (rows as any[]).length === 0) {
@@ -61,26 +48,14 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const cookieStore = await cookies();
-    const sessionToken = cookieStore.get("session_token")?.value;
-
-    if (!sessionToken) {
-      return new Response(JSON.stringify({ message: "Unauthorized" }), {
-        status: 401,
-      });
-    }
-
-    const decoded = jwt.verify(sessionToken, secret) as { id: number };
-    const userId = decoded.id;
-
     const body = await req.json();
     const parsed = createNoteSchema.parse(body);
 
     const connection = await mysql.createConnection(connectionParams);
 
     const [result] = await connection.execute(
-      "INSERT INTO notes (userId, title, content, tags) VALUES (?, ?, ?)",
-      [userId, parsed.title, parsed.content, parsed.tags]
+      "INSERT INTO notes (userId, title, content, tags) VALUES (?, ?, ?, ?)",
+      [parsed.userId, parsed.title, parsed.content, parsed.tags]
     );
 
     connection.end();
